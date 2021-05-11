@@ -20,6 +20,12 @@
 #define levmax 3    /* 最大允许过程嵌套声明层数 [0,  levmax]*/
 #define cxmax 500   /* 最多的虚拟机代码数 */
 
+//自定义宏
+#define strmaxlen 50  // 字符串最大长度
+
+//新增全局变量
+char cur_str[strmaxlen];   //存放字符串
+
 /* 符号 */
 //格式化输入：新增str
 enum symbol {
@@ -31,7 +37,7 @@ enum symbol {
     writesym,    readsym,   dosym,      callsym,   constsym,
     varsym,      procsym,   str,
 };
-#define symnum 32
+#define symnum 33
 
 /* 名字表中的类型 */
 enum object {

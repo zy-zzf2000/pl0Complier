@@ -241,7 +241,14 @@ void error(int n)
 
     printf("****%s!%d\n", space, n);
     fprintf(fa1,"****%s!%d\n", space, n);
-
+    switch(n) {
+        case 1 :
+            printf("常量说明中不可以用\":=\". \n");
+            break;
+        case 100:
+            printf("字符串超出最大长度！\n");
+            break;
+    }
     err++;
 }
 
@@ -354,6 +361,23 @@ int getsym()
                 error(30);
             }
         }
+
+        else if(ch=='"'){     /* 检测是否为字符串  */
+            sym = str;       //将当前词法单元类型置为字符串
+            int i = 0;       //cur_str下标
+            getchdo;
+            while(ch!='"'  && i<strmaxlen){
+                cur_str[i]=ch;
+                i+=1;
+                getchdo;
+            }
+            if(ch!='"'&&i==strmaxlen){
+                error(100);
+            }
+            getchdo;
+            cur_str[i]='\0';    //设置字符串最后一位
+        }
+
         else
         {
             if (ch == ':')      /* 检测赋值符号 */
