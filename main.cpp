@@ -19,6 +19,7 @@
 
 #include "mypl0.h"
 #include "string.h"
+#include <iomanip>
 
 /* 解释执行时使用的栈 */
 #define stacksize 500
@@ -259,6 +260,9 @@ void error(int n)
             break;
         case 104:
             printf("格式化输入变量类型错误！\n");
+            break;
+        case 105:
+            std::cout<<"错误的格式化输入类型，格式化输入必须为%d或%f"<<std::endl;
             break;
     }
     err++;
@@ -877,7 +881,15 @@ int statement(bool* fsys, int* ptx, int lev)
                                 error(103);
                             }
                             else{
-                                gendo(opr, 0, 16);  /* 生成输入指令，读取值到栈顶 */
+                                if(cur_str[str_index]=='d'){    //如果是整数，则使用整数读入指令
+                                    gendo(opr, 0, 16);
+                                }
+                                else if(cur_str[str_index=='f']){
+                                    gendo(opr,0,19);      //如果是浮点数，则使用浮点数读入指令
+                                }
+                                else{
+                                    error(105);
+                                }
                                 gendo(sto, lev-table[i].level, table[i].adr);   /* 储存到变量 */
 
                                 getsymdo;    //获取下一个词法单元，应当为逗号或者右括号
@@ -966,6 +978,9 @@ int statement(bool* fsys, int* ptx, int lev)
                                 i++;//读取格式输入下一位
                                 if(cur_str[i]=='d'){
                                     gendo(opr, 0, 14);
+                                }
+                                else if(cur_str[i]=='f'){
+                                    gendo(opr,0,18);
                                 }
                                 else{
                                     error(102);
@@ -1343,7 +1358,7 @@ void interpret()
 {
     int p, b, t;    /* 指令指针，指令基址，栈顶指针 */
     struct instruction i;   /* 存放当前指令 */
-    int s[stacksize];   /* 栈 */
+    float  s[stacksize];   /* 栈 */
 
     printf("start pl0\n");
     t = 0;
@@ -1387,7 +1402,7 @@ void interpret()
                         s[t-1] = s[t-1]/s[t];
                         break;
                     case 6:
-                        s[t-1] = s[t-1]%2;
+                        s[t-1] = (int)s[t-1]%2;
                         break;
                     case 8:
                         t--;
@@ -1413,27 +1428,44 @@ void interpret()
                         t--;
                         s[t-1] = (s[t-1] <= s[t]);
                         break;
-                    case 14:
-                        printf("%d", s[t-1]);
-                        fprintf(fa2, "%d", s[t-1]);
+                    case 14:            //整数输出
+                        std::cout<<s[t-1];
+                        fprintf(fa2, "%d",(int) s[t-1]);
                         t--;
                         break;
                     case 15:
                         printf("\n");
                         fprintf(fa2,"\n");
                         break;
-                    case 16:
+                    case 16:                //整数读入
+//                        std::cout<<"Integer In"<<std::endl;
                         printf("?");
                         fprintf(fa2, "?");
-                        scanf("%d", &(s[t]));
+                        std::cin>>s[t];
+                        s[t] = (int) s[t];
+//                        scanf("%d", &(s[t]));
                         fprintf(fa2, "%d\n", s[t]);
+//                        std::cout<<s[t];
                         t++;
                         break;
-                    case 17:                       //输出字符栈顶值
-                        printf("%c", s[t - 1]);
-                        fprintf(fa2, "%c", s[t - 1]);
+                    case 17:                       //char类型输出
+                        printf("%c", (int)s[t - 1]);
+                        fprintf(fa2, "%c",(int) s[t - 1]);
                         t--;
                         break;
+                    case 18:                        //浮点数输出
+                        std::cout<<s[t-1];
+                        fprintf(fa2, "%f", s[t-1]);
+                        t--;
+                        break;
+                    case 19:                        //浮点数读入
+//                    std::cout<<"Float In"<<std::endl;
+                        printf("?");
+                        fprintf(fa2, "?");
+                        scanf("%f", &(s[t]));
+                        fprintf(fa2, "%f\n", s[t]);
+//                        std::cout<<s[t];
+                        t++;
                 }
                 break;
             case lod:   /* 取相对当前过程的数据基地址为a的内存的值到栈顶 */
@@ -1469,7 +1501,7 @@ void interpret()
 }
 
 /* 通过过程基址求上l层过程的基址 */
-int base(int l, int* s, int b)
+int base(int l, float* s, int b)
 {
     int b1;
     b1 = b;

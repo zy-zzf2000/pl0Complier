@@ -139,4 +139,4 @@ int vardeclaration(int* ptx, int lev, int* pdx);
 int constdeclaration(int* ptx, int lev, int* pdx);
 int position(char* idt, int tx);
 void enter(enum object k, int* ptx, int lev, int* pdx);
-int base(int l, int* s, int b);
+int base(int l, float* s, int b);
