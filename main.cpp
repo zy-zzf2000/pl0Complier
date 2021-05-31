@@ -249,10 +249,16 @@ void error(int n)
             printf("字符串超出最大长度！\n");
             break;
         case 101:
-            printf("格式化输出匹配错误！\n");
+            printf("格式化输出未找到匹配标识符！\n");
             break;
         case 102:
             printf("无法识别的格式化输出！\n");
+            break;
+        case 103:
+            printf("格式化输入未找到匹配标识符！\n");
+            break;
+        case 104:
+            printf("格式化输入变量类型错误！\n");
             break;
     }
     err++;
@@ -849,33 +855,72 @@ int statement(bool* fsys, int* ptx, int lev)
             }
             else
             {
-                do {
-                    getsymdo;
-                    if (sym == ident)
-                    {
-                        i = position(id, *ptx); /* 查找要读的变量 */
-                    }
-                    else
-                    {
-                        i=0;
-                    }
+                getsymdo;
+                if(sym==str){    //新增格式化read处理
+                    getsymdo;    //读出右边第一个单词，应当为一个逗号或右括号
+                    for(int str_index=0;str_index<strmaxlen;str_index++){
+                        if(cur_str[str_index]=='\0'){    //遇到字符串终结符
+                            break;
+                        }
+                        else if(cur_str[str_index]=='%'){     //遇到格式化输入
+                            str_index++;
+                            getsymdo;             //获取该格式化输入对应的标识符
+                            if(sym!=ident){
+                                error(103);    //格式化输入没有找到匹配的ident
+                            }
 
-                    if (i == 0)
-                    {
-                        error(35);  /* read()中应是声明过的变量名 */
-                    }
-                    else if (table[i].kind != variable)
-                    {
-                        error(32);	/* read()参数表的标识符不是变量, thanks to amd */
-                    }
-                    else
-                    {
-                        gendo(opr, 0, 16);  /* 生成输入指令，读取值到栈顶 */
-                        gendo(sto, lev-table[i].level, table[i].adr);   /* 储存到变量 */
-                    }
-                    getsymdo;
+                            i = position(id, *ptx); /* 查找要读的变量 */
+                            if (table[i].kind != variable){
+                                error(104);
+                            }
+                            else if(i==0){
+                                error(103);
+                            }
+                            else{
+                                gendo(opr, 0, 16);  /* 生成输入指令，读取值到栈顶 */
+                                gendo(sto, lev-table[i].level, table[i].adr);   /* 储存到变量 */
 
-                } while (sym == comma); /* 一条read语句可读多个变量 */
+                                getsymdo;    //获取下一个词法单元，应当为逗号或者右括号
+                            }
+                        }
+                        else{   //如果是其余符号，则直接输出
+                            gendo(lit,0,cur_str[str_index]);    //把当前字符存在栈顶
+                            gendo(opr,0,17);     //将栈顶字符串输出
+                        }
+                    }
+//                    getsym();
+                }
+                else{     //原read语句处理
+                    do {
+                        if(sym == comma){
+                            getsymdo;   //如果当前符号为逗号，则需要继续读取下一个标识符，方式出错
+                        }
+//                      getsymdo;
+                        if (sym == ident)
+                        {
+                            i = position(id, *ptx); /* 查找要读的变量 */
+                        }
+                        else
+                        {
+                            i=0;
+                        }
+
+                        if (i == 0)
+                        {
+                            error(35);  /* read()中应是声明过的变量名 */
+                        }
+                        else if (table[i].kind != variable)
+                        {
+                            error(32);	/* read()参数表的标识符不是变量, thanks to amd */
+                        }
+                        else
+                        {
+                            gendo(opr, 0, 16);  /* 生成输入指令，读取值到栈顶 */
+                            gendo(sto, lev-table[i].level, table[i].adr);   /* 储存到变量 */
+                        }
+                        getsymdo;
+                    } while (sym == comma); /* 一条read语句可读多个变量 */
+                }
             }
             if(sym != rparen)
             {
@@ -908,7 +953,7 @@ int statement(bool* fsys, int* ptx, int lev)
                             }
                             else if(cur_str[i]=='%'){      //遇到了一个格式化输出
 
-                                getsymdo;             //获取该格式化输入对应的标识符
+                                getsymdo;             //获取该格式化输出对应的标识符
                                 if(sym!=ident){
                                     error(101);    //格式化输入没有找到匹配的ident,无法输出
                                 }
