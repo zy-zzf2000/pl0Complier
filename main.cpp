@@ -248,6 +248,12 @@ void error(int n)
         case 100:
             printf("字符串超出最大长度！\n");
             break;
+        case 101:
+            printf("格式化输出匹配错误！\n");
+            break;
+        case 102:
+            printf("无法识别的格式化输出！\n");
+            break;
     }
     err++;
 }
@@ -891,14 +897,60 @@ int statement(bool* fsys, int* ptx, int lev)
                 getsymdo;
                 if (sym == lparen)
                 {
-                    do {
-                        getsymdo;
-                        memcpy(nxtlev, fsys, sizeof(bool)*symnum);
-                        nxtlev[rparen] = true;
-                        nxtlev[comma] = true;       /* write的后跟符号为) or , */
-                        expressiondo(nxtlev, ptx, lev); /* 调用表达式处理，此处与read不同，read为给变量赋值 */
-                        gendo(opr, 0, 14);  /* 生成输出指令，输出栈顶的值 */
-                    } while (sym == comma);
+                    getsymdo;
+                    if(sym==str){    //如果为字符串，则表明进行格式化输出，需要遍历str的查看是否有%d形式
+                        getsymdo;    //读出字符串右边第一个单词，应当为一个逗号或右括号
+//                        int k=0;
+                        //遍历原str
+                        for(int i=0;i<strmaxlen;i++){
+                            if(cur_str[i]=='\0'){    //遇到字符串终结符
+                                break;
+                            }
+                            else if(cur_str[i]=='%'){      //遇到了一个格式化输出
+
+                                getsymdo;             //获取该格式化输入对应的标识符
+                                if(sym!=ident){
+                                    error(101);    //格式化输入没有找到匹配的ident,无法输出
+                                }
+
+                                memcpy(nxtlev, fsys, sizeof(bool)*symnum);
+                                nxtlev[rparen] = true;
+                                nxtlev[comma] = true;       /*这三行代码的作用代码出错补救措施*/
+
+                                expressiondo(nxtlev, ptx, lev); /* 调用表达式处理，此处与read不同，read为给变量赋值 */
+                                i++;//读取格式输入下一位
+                                if(cur_str[i]=='d'){
+                                    gendo(opr, 0, 14);
+                                }
+                                else{
+                                    error(102);
+                                }
+                            }
+                            else{       //若遇到除%以外的其他信息，则直接输出即可
+                                gendo(lit,0,cur_str[i]);    //把当前字符存在栈顶
+                                gendo(opr,0,17);     //将栈顶字符串输出
+                            }
+                        }
+                    }
+
+                    else{
+                        do {
+                            if(sym == comma){
+                                getsymdo;
+                            }
+                            //参数nxtlev代表了当前词单元的follow集
+
+                            memcpy(nxtlev, fsys, sizeof(bool)*symnum);
+                            nxtlev[rparen] = true;
+                            nxtlev[comma] = true;       /* write的后跟符号为) or , */
+
+                            //上述三行代码的作用为更新follow集
+
+                            expressiondo(nxtlev, ptx, lev); /* 调用表达式处理，此处与read不同，read为给变量赋值 */
+                            gendo(opr, 0, 14);  /* 生成输出指令，输出栈顶的值 */
+                        } while (sym == comma);
+                    }
+
                     if (sym != rparen)
                     {
                         error(33);  /* write()中应为完整表达式 */
@@ -1331,6 +1383,11 @@ void interpret()
                         scanf("%d", &(s[t]));
                         fprintf(fa2, "%d\n", s[t]);
                         t++;
+                        break;
+                    case 17:                       //输出字符栈顶值
+                        printf("%c", s[t - 1]);
+                        fprintf(fa2, "%c", s[t - 1]);
+                        t--;
                         break;
                 }
                 break;
