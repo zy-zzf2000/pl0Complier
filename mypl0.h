@@ -28,6 +28,9 @@ char cur_str[strmaxlen];   //存放字符串
 
 /* 符号 */
 //格式化输入：新增str
+//for循环，新增forsym
+//for循环，新增tosym
+//for循环，新增downtosym
 enum symbol {
     nul,         ident,     number,     plus,      minus,
     times,       slash,     oddsym,     eql,       neq,
@@ -35,9 +38,10 @@ enum symbol {
     rparen,      comma,     semicolon,  period,    becomes,
     beginsym,    endsym,    ifsym,      thensym,   whilesym,
     writesym,    readsym,   dosym,      callsym,   constsym,
-    varsym,      procsym,   str,
+    varsym,      procsym,   str,        forsym,    tosym,
+    downtosym,
 };
-#define symnum 33
+#define symnum 36
 
 /* 名字表中的类型 */
 enum object {

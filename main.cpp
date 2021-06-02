@@ -264,6 +264,15 @@ void error(int n)
         case 105:
             std::cout<<"错误的格式化输入类型，格式化输入必须为%d或%f"<<std::endl;
             break;
+        case 106:
+            std::cout<<"for语句后不得出现除赋值语句外的其他语句！"<<std::endl;
+            break;
+        case 107:
+            std::cout<<"for语句缺少to或down to！"<<std::endl;
+            break;
+        case 108:
+            std::cout<<"for语句缺少do！"<<std::endl;
+            break;
     }
     err++;
 }
@@ -1128,6 +1137,63 @@ int statement(bool* fsys, int* ptx, int lev)
                                 statementdo(fsys, ptx, lev);    /* 循环体 */
                                 gendo(jmp, 0, cx1); /* 回头重新判断条件 */
                                 code[cx2].a = cx;   /* 反填跳出循环的地址，与if类似 */
+                            }
+                            else if(sym == forsym){     /* 准备按照while语句处理 */
+                                getsymdo;
+                                if(sym!=ident){
+                                    error(106);    //格式化输入没有找到匹配的ident,无法输出
+                                }
+
+                                i=position(id,*ptx);  //记录循环控制变量所在位置
+
+                                memcpy(nxtlev, fsys, sizeof(bool)*symnum);
+                                nxtlev[tosym] = true;   //后跟符号为tosym或downtosym
+                                nxtlev[downtosym] = true;
+                                statementdo(nxtlev, ptx, lev);
+
+                                getsymdo;
+
+                                switch(sym){
+                                    case tosym:           //步长为的向上增加
+                                    cx1=cx;       //保存循环开始点
+
+                                    //进入for循环之前，首先需要进行条件的判断
+                                    gendo(lod,lev-table[i].level,table[i].adr);   //将控制变量取出到栈顶
+
+                                    memcpy(nxtlev,fsys,sizeof(bool)*symnum);
+                                    nxtlev[dosym]=true;                //表达式后跟do
+
+                                    expressiondo(nxtlev,ptx,lev);       //处理终止条件表达式，此时控制变量的终值被存储在栈顶，而控制变量被存储在次站顶
+                                    gendo(opr,0,13);  //判断是否小于终止条件，for循环不应包括终止值，因此使用opr 0 13 而非opr 0 10
+
+                                    cx2=cx;                      /* 保存循环体的结束的下一个位置 */
+
+                                    gendo(jpc,0,0);        /* 生成条件跳转，但跳出循环的地址未知，先用0代替 */
+
+                                    getsymdo;
+
+                                    if(sym!=dosym){
+                                        error(108);
+                                    }
+
+                                    statement(fsys,ptx,lev);  //循环体内语句处理
+                                    gendo(lod,lev-table[i].level,table[i].adr); //将循环变量的值取到栈顶
+                                    gendo(lit,0,1);     //to步长为1
+                                    gendo(opr,0,2);     //计算得到循环遍历新值
+
+                                    gendo(sto,lev-table[i].level,table[i].adr);     //更新循环变量的新值
+                                    gendo(jmp,0,cx1);    //进行下一次循环
+
+                                    code[cx2].a=cx;         //回填循环跳出位置
+
+                                    break;
+                                }
+
+
+
+
+
+
                             }
                             else
                             {
