@@ -12,7 +12,7 @@
 //} bool;
 
 
-#define norw 15     /* 关键字个数,13->15新增了forsym和tosym */
+#define norw 16     /* 关键字个数,13->15新增了forsym和tosym */  /*新增downtosym*/
 #define txmax 100   /* 名字表容量 */
 #define nmax 14     /* number的最大位数 */
 #define al 10       /* 符号的最大长度 */

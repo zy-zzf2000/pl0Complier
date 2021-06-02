@@ -130,21 +130,24 @@ void init()
     strcpy(&(word[1][0]), "call");
     strcpy(&(word[2][0]), "const");
     strcpy(&(word[3][0]), "do");
-    strcpy(&(word[4][0]), "end");
 
-    strcpy(&(word[5][0]),"for");  //for语句关键字
+    strcpy(&(word[4][0]), "downto");    //downto关键字
 
-    strcpy(&(word[6][0]), "if");
-    strcpy(&(word[7][0]), "odd");
-    strcpy(&(word[8][0]), "procedure");
-    strcpy(&(word[9][0]), "read");
-    strcpy(&(word[10][0]), "then");
+    strcpy(&(word[5][0]), "end");
 
-    strcpy(&(word[11][0]),"to");   //to语句关键字
+    strcpy(&(word[6][0]),"for");  //for语句关键字
 
-    strcpy(&(word[12][0]), "var");
-    strcpy(&(word[13][0]), "while");
-    strcpy(&(word[14][0]), "write");
+    strcpy(&(word[7][0]), "if");
+    strcpy(&(word[8][0]), "odd");
+    strcpy(&(word[9][0]), "procedure");
+    strcpy(&(word[10][0]), "read");
+    strcpy(&(word[11][0]), "then");
+
+    strcpy(&(word[12][0]),"to");   //to语句关键字
+
+    strcpy(&(word[13][0]), "var");
+    strcpy(&(word[14][0]), "while");
+    strcpy(&(word[15][0]), "write");
 
 
 
@@ -154,21 +157,24 @@ void init()
     wsym[1] = callsym;
     wsym[2] = constsym;
     wsym[3] = dosym;
-    wsym[4] = endsym;
 
-    wsym[5] = forsym;
+    wsym[4] = downtosym;
 
-    wsym[6] = ifsym;
-    wsym[7] = oddsym;
-    wsym[8] = procsym;
-    wsym[9] = readsym;
-    wsym[10] = thensym;
+    wsym[5] = endsym;
 
-    wsym[11] = tosym;
+    wsym[6] = forsym;
 
-    wsym[12] = varsym;
-    wsym[13] = whilesym;
-    wsym[14] = writesym;
+    wsym[7] = ifsym;
+    wsym[8] = oddsym;
+    wsym[9] = procsym;
+    wsym[10] = readsym;
+    wsym[11] = thensym;
+
+    wsym[12] = tosym;
+
+    wsym[13] = varsym;
+    wsym[14] = whilesym;
+    wsym[15] = writesym;
 
 
 
@@ -209,8 +215,6 @@ void init()
     facbegsys[ident] = true;
     facbegsys[number] = true;
     facbegsys[lparen] = true;
-
-
 }
 
 /*
@@ -1206,6 +1210,40 @@ int statement(bool* fsys, int* ptx, int lev)
                                     code[cx2].a=cx;         //回填循环跳出位置
 
                                     break;
+                                    case downtosym:           //步长为的向上增加
+                                        cx1=cx;       //保存循环开始点
+
+                                        //进入for循环之前，首先需要进行条件的判断
+                                        gendo(lod,lev-table[i].level,table[i].adr);   //将控制变量取出到栈顶
+
+                                        memcpy(nxtlev,fsys,sizeof(bool)*symnum);
+                                        nxtlev[dosym]=true;                //表达式后跟do
+
+                                        getsymdo;
+                                        expressiondo(nxtlev,ptx,lev);       //处理终止条件表达式，此时控制变量的终值被存储在栈顶，而控制变量被存储在次站顶
+                                        gendo(opr,0,11);  //判断是否等于终止条件
+
+                                        cx2=cx;                      /* 保存循环体的结束的下一个位置 */
+
+                                        gendo(jpc,0,0);        /* 生成条件跳转，但跳出循环的地址未知，先用0代替 */
+
+
+                                        if(sym!=dosym){
+                                            error(108);
+                                        }
+
+                                        getsymdo;
+                                        statement(fsys,ptx,lev);  //循环体内语句处理
+                                        gendo(lod,lev-table[i].level,table[i].adr); //将循环变量的值取到栈顶
+                                        gendo(lit,0,1);     //to步长为1
+                                        gendo(opr,0,3);     //计算得到循环遍历新值
+
+                                        gendo(sto,lev-table[i].level,table[i].adr);     //更新循环变量的新值
+                                        gendo(jmp,0,cx1);    //进行下一次循环
+
+                                        code[cx2].a=cx;         //回填循环跳出位置
+
+                                        break;
                                 }
 
 
