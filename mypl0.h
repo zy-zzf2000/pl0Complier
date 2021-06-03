@@ -12,7 +12,7 @@
 //} bool;
 
 
-#define norw 17     /* 关键字个数,13->15新增了forsym和tosym */  /*16新增downtosym*/    /*17新增breaksym*/
+#define norw 18     /* 关键字个数,13->15新增了forsym和tosym */  /*16新增downtosym*/    /*17新增breaksym*/   /*18新增continuesym*/
 #define txmax 100   /* 名字表容量 */
 #define nmax 14     /* number的最大位数 */
 #define al 10       /* 符号的最大长度 */
@@ -20,17 +20,20 @@
 #define levmax 3    /* 最大允许过程嵌套声明层数 [0,  levmax]*/
 #define cxmax 500   /* 最多的虚拟机代码数 */
 
-//新增全局变量，定义最大的循环嵌套数为8
+//新增宏，定义最大的循环嵌套数为8
 #define max_loop  8
+#define strmaxlen 50  // 字符串最大长度
 //新增全局变量
 int cur_loop_num;   //定义当前的循环数
 int break_cx;   //存放break语句的指令地址
 bool contains_break[max_loop];   //用于判断某层循环是否含有break语句
-//自定义宏
-#define strmaxlen 50  // 字符串最大长度
 
-//新增全局变量
 char cur_str[strmaxlen];   //存放字符串
+
+int continue_cx;   //存放continue语句的指令地址
+bool contains_continue[max_loop];   //用于判断某层循环是否含有continue语句
+
+
 
 /* 符号 */
 //格式化输入：新增str
@@ -45,9 +48,9 @@ enum symbol {
     beginsym,    endsym,    ifsym,      thensym,   whilesym,
     writesym,    readsym,   dosym,      callsym,   constsym,
     varsym,      procsym,   str,        forsym,    tosym,
-    downtosym,   breaksym,
+    downtosym,   breaksym,  continuesym,
 };
-#define symnum 37
+#define symnum 38
 
 /* 名字表中的类型 */
 enum object {

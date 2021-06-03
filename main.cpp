@@ -132,25 +132,28 @@ void init()
 
     strcpy(&(word[2][0]), "call");
     strcpy(&(word[3][0]), "const");
-    strcpy(&(word[4][0]), "do");
 
-    strcpy(&(word[5][0]), "downto");    //downto关键字
+    strcpy(&(word[4][0]), "continue");    //continue关键字
 
-    strcpy(&(word[6][0]), "end");
+    strcpy(&(word[5][0]), "do");
 
-    strcpy(&(word[7][0]),"for");  //for语句关键字
+    strcpy(&(word[6][0]), "downto");    //downto关键字
 
-    strcpy(&(word[8][0]), "if");
-    strcpy(&(word[9][0]), "odd");
-    strcpy(&(word[10][0]), "procedure");
-    strcpy(&(word[11][0]), "read");
-    strcpy(&(word[12][0]), "then");
+    strcpy(&(word[7][0]), "end");
 
-    strcpy(&(word[13][0]),"to");   //to语句关键字
+    strcpy(&(word[8][0]),"for");  //for语句关键字
 
-    strcpy(&(word[14][0]), "var");
-    strcpy(&(word[15][0]), "while");
-    strcpy(&(word[16][0]), "write");
+    strcpy(&(word[9][0]), "if");
+    strcpy(&(word[10][0]), "odd");
+    strcpy(&(word[11][0]), "procedure");
+    strcpy(&(word[12][0]), "read");
+    strcpy(&(word[13][0]), "then");
+
+    strcpy(&(word[14][0]),"to");   //to语句关键字
+
+    strcpy(&(word[15][0]), "var");
+    strcpy(&(word[16][0]), "while");
+    strcpy(&(word[17][0]), "write");
 
 
 
@@ -162,25 +165,28 @@ void init()
 
     wsym[2] = callsym;
     wsym[3] = constsym;
-    wsym[4] = dosym;
 
-    wsym[5] = downtosym;
+    wsym[4] = continuesym;
 
-    wsym[6] = endsym;
+    wsym[5] = dosym;
 
-    wsym[7] = forsym;
+    wsym[6] = downtosym;
 
-    wsym[8] = ifsym;
-    wsym[9] = oddsym;
-    wsym[10] = procsym;
-    wsym[11] = readsym;
-    wsym[12] = thensym;
+    wsym[7] = endsym;
 
-    wsym[13] = tosym;
+    wsym[8] = forsym;
 
-    wsym[14] = varsym;
-    wsym[15] = whilesym;
-    wsym[16] = writesym;
+    wsym[9] = ifsym;
+    wsym[10] = oddsym;
+    wsym[11] = procsym;
+    wsym[12] = readsym;
+    wsym[13] = thensym;
+
+    wsym[14] = tosym;
+
+    wsym[15] = varsym;
+    wsym[16] = whilesym;
+    wsym[17] = writesym;
 
 
 
@@ -312,6 +318,9 @@ void error(int n)
             break;
         case 110:
             std::cout<<"在非循环语句内使用break语句！"<<std::endl;
+            break;
+        case 111:
+            std::cout<<"在非循环语句内使用continue语句！"<<std::endl;
             break;
     }
     err++;
@@ -1176,6 +1185,11 @@ int statement(bool* fsys, int* ptx, int lev)
                                     error(18);  /* 缺少do */
                                 }
                                 statementdo(fsys, ptx, lev);    /* 循环体 */
+
+                                if(contains_break[cur_loop_num]==true){    //若有continue语句，则需要回填跳转地址
+                                    code[continue_cx].a=cx;
+                                }
+
                                 gendo(jmp, 0, cx1); /* 回头重新判断条件 */
                                 code[cx2].a = cx;   /* 反填跳出循环的地址，与if类似 */
 
@@ -1227,6 +1241,11 @@ int statement(bool* fsys, int* ptx, int lev)
                                     }
                                     getsymdo;
                                     statement(fsys,ptx,lev);  //循环体内语句处理
+
+                                    if(contains_continue[cur_loop_num]==true){    //若有continue语句，则需要回填跳转地址
+                                        code[continue_cx].a=cx;
+                                    }
+
                                     gendo(lod,lev-table[i].level,table[i].adr); //将循环变量的值取到栈顶
                                     gendo(lit,0,1);     //to步长为1
                                     gendo(opr,0,2);     //计算得到循环遍历新值
@@ -1265,6 +1284,12 @@ int statement(bool* fsys, int* ptx, int lev)
 
                                         getsymdo;
                                         statement(fsys,ptx,lev);  //循环体内语句处理
+
+                                        if(contains_break[cur_loop_num]==true){    //若有continue语句，则需要回填跳转地址
+                                            code[continue_cx].a=cx;
+                                        }
+
+
                                         gendo(lod,lev-table[i].level,table[i].adr); //将循环变量的值取到栈顶
                                         gendo(lit,0,1);     //to步长为1
                                         gendo(opr,0,3);     //计算得到循环遍历新值
@@ -1290,6 +1315,15 @@ int statement(bool* fsys, int* ptx, int lev)
                                 }
                                 contains_break[cur_loop_num]=true;
                                 break_cx=cx;
+                                gendo(jmp,0,0);     //生成跳转指令，在循环中回填跳转地址
+                                getsymdo;
+                            }
+                            else if(sym==continuesym){
+                                if(cur_loop_num==0){
+                                    error(111);
+                                }
+                                contains_continue[cur_loop_num]=true;
+                                continue_cx=cx;
                                 gendo(jmp,0,0);     //生成跳转指令，在循环中回填跳转地址
                                 getsymdo;
                             }
