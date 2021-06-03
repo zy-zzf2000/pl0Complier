@@ -1174,11 +1174,11 @@ int statement(bool* fsys, int* ptx, int lev)
                                 memcpy(nxtlev, fsys, sizeof(bool)*symnum);
                                 nxtlev[tosym] = true;   //后跟符号为tosym或downtosym
                                 nxtlev[downtosym] = true;
-                                statementdo(nxtlev, ptx, lev);
+                                statementdo(nxtlev, ptx, lev);    //处理赋值语句
 
                                 switch(sym){
-                                    case tosym:           //步长为的向上增加
-                                    cx1=cx;       //保存循环开始点
+                                    case tosym:           //步长为向上增加
+                                    cx1=cx;       //保存循环开始点,也就是将控制遍历取出到栈顶这条指令的地址
 
                                     //进入for循环之前，首先需要进行条件的判断
                                     gendo(lod,lev-table[i].level,table[i].adr);   //将控制变量取出到栈顶
@@ -1190,7 +1190,7 @@ int statement(bool* fsys, int* ptx, int lev)
                                     expressiondo(nxtlev,ptx,lev);       //处理终止条件表达式，此时控制变量的终值被存储在栈顶，而控制变量被存储在次站顶
                                     gendo(opr,0,13);  //判断是否小于终止条件，for循环不应包括终止值，因此使用opr 0 13 而非opr 0 10
 
-                                    cx2=cx;                      /* 保存循环体的结束的下一个位置 */
+                                    cx2=cx;                      /* for循环跳转指令的地址位置 */
 
                                     gendo(jpc,0,0);        /* 生成条件跳转，但跳出循环的地址未知，先用0代替 */
 
