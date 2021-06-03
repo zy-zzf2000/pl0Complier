@@ -1186,7 +1186,7 @@ int statement(bool* fsys, int* ptx, int lev)
                                 }
                                 statementdo(fsys, ptx, lev);    /* 循环体 */
 
-                                if(contains_break[cur_loop_num]==true){    //若有continue语句，则需要回填跳转地址
+                                if(contains_continue[cur_loop_num]==true){    //若有continue语句，则需要回填跳转地址
                                     code[continue_cx].a=cx;
                                 }
 
@@ -1285,7 +1285,7 @@ int statement(bool* fsys, int* ptx, int lev)
                                         getsymdo;
                                         statement(fsys,ptx,lev);  //循环体内语句处理
 
-                                        if(contains_break[cur_loop_num]==true){    //若有continue语句，则需要回填跳转地址
+                                        if(contains_continue[cur_loop_num]==true){    //若有continue语句，则需要回填跳转地址
                                             code[continue_cx].a=cx;
                                         }
 
