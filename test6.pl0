@@ -1,0 +1,16 @@
+var i,j,k;
+begin
+   for i:=1 to 5 do
+      begin
+        write("i = %d",i);
+        for j:=1 to 5 do
+            begin
+                write("j = %d",j);
+                for k:=1 to 5 do
+                    begin
+                        write("k = %d",k);
+                        break;
+                    end;
+            end;
+      end;
+end.

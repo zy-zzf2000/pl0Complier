@@ -1159,6 +1159,7 @@ int statement(bool* fsys, int* ptx, int lev)
                         {
                             if (sym == whilesym)    /* 准备按照while语句处理 */
                             {
+                                cur_loop_num++;
                                 cx1 = cx;   /* 保存判断条件操作的位置 */
                                 getsymdo;
                                 memcpy(nxtlev, fsys, sizeof(bool)*symnum);
@@ -1177,6 +1178,13 @@ int statement(bool* fsys, int* ptx, int lev)
                                 statementdo(fsys, ptx, lev);    /* 循环体 */
                                 gendo(jmp, 0, cx1); /* 回头重新判断条件 */
                                 code[cx2].a = cx;   /* 反填跳出循环的地址，与if类似 */
+
+                                if(contains_break[cur_loop_num]==true){    //若有break语句，则需要回填跳转地址
+                                    cur_loop_num--;
+                                    code[break_cx].a=cx;
+                                }
+                                cur_loop_num--;
+
                             }
                             else if(sym == forsym){     /* 准备按照for语句处理 */
                                 cur_loop_num++;//更新循环层数
