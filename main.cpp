@@ -127,54 +127,60 @@ void init()
 
     /* 设置保留字名字,按照字母顺序，便于折半查找 */
     strcpy(&(word[0][0]), "begin");
-    strcpy(&(word[1][0]), "call");
-    strcpy(&(word[2][0]), "const");
-    strcpy(&(word[3][0]), "do");
 
-    strcpy(&(word[4][0]), "downto");    //downto关键字
+    strcpy(&(word[1][0]), "break");     //break关键字
 
-    strcpy(&(word[5][0]), "end");
+    strcpy(&(word[2][0]), "call");
+    strcpy(&(word[3][0]), "const");
+    strcpy(&(word[4][0]), "do");
 
-    strcpy(&(word[6][0]),"for");  //for语句关键字
+    strcpy(&(word[5][0]), "downto");    //downto关键字
 
-    strcpy(&(word[7][0]), "if");
-    strcpy(&(word[8][0]), "odd");
-    strcpy(&(word[9][0]), "procedure");
-    strcpy(&(word[10][0]), "read");
-    strcpy(&(word[11][0]), "then");
+    strcpy(&(word[6][0]), "end");
 
-    strcpy(&(word[12][0]),"to");   //to语句关键字
+    strcpy(&(word[7][0]),"for");  //for语句关键字
 
-    strcpy(&(word[13][0]), "var");
-    strcpy(&(word[14][0]), "while");
-    strcpy(&(word[15][0]), "write");
+    strcpy(&(word[8][0]), "if");
+    strcpy(&(word[9][0]), "odd");
+    strcpy(&(word[10][0]), "procedure");
+    strcpy(&(word[11][0]), "read");
+    strcpy(&(word[12][0]), "then");
+
+    strcpy(&(word[13][0]),"to");   //to语句关键字
+
+    strcpy(&(word[14][0]), "var");
+    strcpy(&(word[15][0]), "while");
+    strcpy(&(word[16][0]), "write");
 
 
 
 
     /* 设置保留字符号 */
     wsym[0] = beginsym;
-    wsym[1] = callsym;
-    wsym[2] = constsym;
-    wsym[3] = dosym;
 
-    wsym[4] = downtosym;
+    wsym[1] = breaksym; //break关键字
 
-    wsym[5] = endsym;
+    wsym[2] = callsym;
+    wsym[3] = constsym;
+    wsym[4] = dosym;
 
-    wsym[6] = forsym;
+    wsym[5] = downtosym;
 
-    wsym[7] = ifsym;
-    wsym[8] = oddsym;
-    wsym[9] = procsym;
-    wsym[10] = readsym;
-    wsym[11] = thensym;
+    wsym[6] = endsym;
 
-    wsym[12] = tosym;
+    wsym[7] = forsym;
 
-    wsym[13] = varsym;
-    wsym[14] = whilesym;
-    wsym[15] = writesym;
+    wsym[8] = ifsym;
+    wsym[9] = oddsym;
+    wsym[10] = procsym;
+    wsym[11] = readsym;
+    wsym[12] = thensym;
+
+    wsym[13] = tosym;
+
+    wsym[14] = varsym;
+    wsym[15] = whilesym;
+    wsym[16] = writesym;
 
 
 
@@ -210,11 +216,14 @@ void init()
     statbegsys[writesym] = true;
 
     statbegsys[forsym] = true;  //新增for符号集
+    statbegsys[breaksym] = true;  //新增break符号集
 
     /* 设置因子开始符号集 */
     facbegsys[ident] = true;
     facbegsys[number] = true;
     facbegsys[lparen] = true;
+
+    cur_loop_num=0;   //初始的循环被置为0
 }
 
 /*
@@ -297,6 +306,12 @@ void error(int n)
             break;
         case 108:
             std::cout<<"for语句缺少do！"<<std::endl;
+            break;
+        case 109:
+            std::cout<<"循环嵌套超过最大限制！"<<std::endl;
+            break;
+        case 110:
+            std::cout<<"在非循环语句内使用break语句！"<<std::endl;
             break;
     }
     err++;
@@ -1163,7 +1178,11 @@ int statement(bool* fsys, int* ptx, int lev)
                                 gendo(jmp, 0, cx1); /* 回头重新判断条件 */
                                 code[cx2].a = cx;   /* 反填跳出循环的地址，与if类似 */
                             }
-                            else if(sym == forsym){     /* 准备按照while语句处理 */
+                            else if(sym == forsym){     /* 准备按照for语句处理 */
+                                cur_loop_num++;//更新循环层数
+                                if(cur_loop_num>max_loop){
+                                    error(109);
+                                }
                                 getsymdo;
                                 if(sym!=ident){
                                     error(106);    //格式化输入没有找到匹配的ident,无法输出
@@ -1208,8 +1227,12 @@ int statement(bool* fsys, int* ptx, int lev)
                                     gendo(jmp,0,cx1);    //进行下一次循环
 
                                     code[cx2].a=cx;         //回填循环跳出位置
-
+                                    if(contains_break[cur_loop_num]==true){    //若有break语句，则需要回填跳转地址
+                                        cur_loop_num--;
+                                        code[break_cx].a=cx;
+                                    }
                                     break;
+
                                     case downtosym:           //步长为的向上增加
                                         cx1=cx;       //保存循环开始点
 
@@ -1243,10 +1266,24 @@ int statement(bool* fsys, int* ptx, int lev)
 
                                         code[cx2].a=cx;         //回填循环跳出位置
 
+                                        if(contains_break[cur_loop_num]==true){    //若有break语句，则需要回填跳转地址
+                                            cur_loop_num--;
+                                            code[break_cx].a=cx;
+                                        }
+                                        cur_loop_num--;
                                         break;
                                 }
 
 
+                            }
+                            else if(sym==breaksym){
+                                if(cur_loop_num==0){
+                                    error(110);
+                                }
+                                contains_break[cur_loop_num]=true;
+                                break_cx=cx;
+                                gendo(jmp,0,0);     //生成跳转指令，在循环中回填跳转地址
+                                getsymdo;
                             }
                             else
                             {
