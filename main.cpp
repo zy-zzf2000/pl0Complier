@@ -146,16 +146,22 @@ void init()
     strcpy(&(word[8][0]),"for");  //for语句关键字
 
     strcpy(&(word[9][0]), "if");
-    strcpy(&(word[10][0]), "odd");
-    strcpy(&(word[11][0]), "procedure");
-    strcpy(&(word[12][0]), "read");
-    strcpy(&(word[13][0]), "then");
 
-    strcpy(&(word[14][0]),"to");   //to语句关键字
+    strcpy(&(word[10][0]), "malloc");  //malloc关键字
 
-    strcpy(&(word[15][0]), "var");
-    strcpy(&(word[16][0]), "while");
-    strcpy(&(word[17][0]), "write");
+    strcpy(&(word[11][0]), "odd");
+    strcpy(&(word[12][0]), "procedure");
+    strcpy(&(word[13][0]), "ptr");
+    strcpy(&(word[14][0]), "read");
+    strcpy(&(word[15][0]), "then");
+
+    strcpy(&(word[16][0]),"to");   //to语句关键字
+
+    strcpy(&(word[17][0]), "var");
+
+    strcpy(&(word[18][0]), "while");
+
+    strcpy(&(word[19][0]), "write");
 
 
 
@@ -179,16 +185,20 @@ void init()
     wsym[8] = forsym;
 
     wsym[9] = ifsym;
-    wsym[10] = oddsym;
-    wsym[11] = procsym;
-    wsym[12] = readsym;
-    wsym[13] = thensym;
+    wsym[10] = mallocsym;
+    wsym[11] = oddsym;
+    wsym[12] = procsym;
 
-    wsym[14] = tosym;
+    wsym[13] = ptrsym;
 
-    wsym[15] = varsym;
-    wsym[16] = whilesym;
-    wsym[17] = writesym;
+    wsym[14] = readsym;
+    wsym[15] = thensym;
+
+    wsym[16] = tosym;
+
+    wsym[17] = varsym;
+    wsym[18] = whilesym;
+    wsym[19] = writesym;
 
 
 
@@ -323,6 +333,18 @@ void error(int n)
             break;
         case 111:
             std::cout<<"在非循环语句内使用continue语句！"<<std::endl;
+            break;
+        case 112:
+            std::cout<<"ptr缺少正确的标识符！"<<std::endl;
+            break;
+        case 113:
+            std::cout<<"ptr赋值符号使用错误!"<<std::endl;
+            break;
+        case 114:
+            std::cout<<"缺少malloc关键字!"<<std::endl;
+            break;
+        case 115:
+            std::cout<<"缺少小括号!"<<std::endl;
             break;
     }
     err++;
@@ -1327,6 +1349,33 @@ int statement(bool* fsys, int* ptx, int lev)
                                 contains_continue[cur_loop_num]=true;
                                 continue_cx=cx;
                                 gendo(jmp,0,0);     //生成跳转指令，在循环中回填跳转地址
+                                getsymdo;
+                            }
+                            else if(sym==ptrsym){     //动态内存分配
+                                getsymdo;
+                                if(sym!=ident){
+                                    error(112);
+                                }
+                                getsymdo;
+                                if(sym!=becomes){
+                                    error(113);
+                                }
+                                getsymdo;
+                                if(sym!=mallocsym){
+                                    error(114);
+                                }
+                                getsymdo;
+                                if(sym!=lparen){
+                                    error(115);
+                                }
+                                getsymdo;
+                                memcpy(nxtlev, fsys, sizeof(bool)*symnum);
+                                nxtlev[rparen] = true;   //后跟符号为右括号
+                                expressiondo(nxtlev, ptx, lev);    //处理赋值语句
+                                if (sym != rparen)
+                                {
+                                    error(115);
+                                }
                                 getsymdo;
                             }
                             else

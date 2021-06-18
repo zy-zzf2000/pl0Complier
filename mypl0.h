@@ -10,9 +10,18 @@
 //    false,
 //    true
 //} bool;
+#include <vector>
+class Partition_Table{    //空闲&占用分区表
+public:
+    int id;  //分区序号
+    int size;//分区大小
+    int addr;//分区起始地址
+};
 
+std::vector<Partition_Table> free_table;   //空闲分区表
+std::vector<Partition_Table> used_table;   //分配分区表
 
-#define norw 18     /* 关键字个数,13->15新增了forsym和tosym */  /*16新增downtosym*/    /*17新增breaksym*/   /*18新增continuesym*/
+#define norw 20     /* 关键字个数,13->15新增了forsym和tosym */  /*16新增downtosym*/    /*17新增breaksym*/   /*18新增continuesym*/  /*20新增ptr和malloc*/
 #define txmax 100   /* 名字表容量 */
 #define nmax 14     /* number的最大位数 */
 #define al 10       /* 符号的最大长度 */
@@ -23,6 +32,8 @@
 //新增宏，定义最大的循环嵌套数为8
 #define max_loop  8
 #define strmaxlen 50  // 字符串最大长度
+#define heapsize 500 //堆空间大小
+
 //新增全局变量
 int cur_loop_num;   //定义当前的循环数
 int break_cx;   //存放break语句的指令地址
@@ -32,7 +43,7 @@ char cur_str[strmaxlen];   //存放字符串
 
 int continue_cx;   //存放continue语句的指令地址
 bool contains_continue[max_loop];   //用于判断某层循环是否含有continue语句
-
+float heap[heapsize];   //堆
 
 
 /* 符号 */
@@ -40,6 +51,8 @@ bool contains_continue[max_loop];   //用于判断某层循环是否含有continue语句
 //for循环，新增forsym
 //for循环，新增tosym
 //for循环，新增downtosym
+//动态内存分配，新增ptrsym
+//动态内存分配，新增mallocsym
 enum symbol {
     nul,         ident,     number,     plus,      minus,
     times,       slash,     oddsym,     eql,       neq,
@@ -48,16 +61,16 @@ enum symbol {
     beginsym,    endsym,    ifsym,      thensym,   whilesym,
     writesym,    readsym,   dosym,      callsym,   constsym,
     varsym,      procsym,   str,        forsym,    tosym,
-    downtosym,   breaksym,  continuesym,
+    downtosym,   breaksym,  continuesym,ptrsym,    mallocsym,
 };
-#define symnum 38
+#define symnum 40
 
 /* 名字表中的类型 */
 enum object {
     constant,
     variable,
     procedur,
-    array       //add
+    ptr,
 };
 
 /* 虚拟机代码 */
