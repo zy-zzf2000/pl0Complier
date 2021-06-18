@@ -24,9 +24,10 @@
 /* 解释执行时使用的栈 */
 #define stacksize 500
 
-int main()
+int main(int argc, char** argv)
 {
     bool nxtlev[symnum];
+//    std::cout<<"args:"<<argv[1];
 
     printf("Input pl/0 file?   ");
     scanf("%s", fname);     /* 输入文件名 */
@@ -98,6 +99,7 @@ int main()
     }
 
     printf("\n");
+    system("pause");
     return 0;
 }
 
