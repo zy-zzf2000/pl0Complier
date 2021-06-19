@@ -346,6 +346,9 @@ void error(int n)
         case 115:
             std::cout<<"缺少小括号!"<<std::endl;
             break;
+        case 116:
+            std::cout<<"栈空间不足！"<<std::endl;
+            break;
     }
     err++;
 }
@@ -797,6 +800,25 @@ void enter(enum object k, int* ptx, int lev, int* pdx)
             break;
     }
 }
+
+/*
+* 把指针加入到名字表中，重载enter函数
+*
+* k:      名字种类const,var or procedure
+* ptx:    名字表尾指针的指针，为了可以改变名字表尾指针的值
+* lev:    名字所在的层次,，以后所有的lev都是这样
+* pdx:    dx为当前应分配的变量的相对地址，分配后要增加1
+*/
+void enter(enum object k, int* ptx, int lev,int size)
+{
+    (*ptx)++;
+    strcpy(table[(*ptx)].name, id); /* 全局变量id中已存有当前名字的名字 */
+    table[(*ptx)].kind = k;
+    table[(*ptx)].size = size;
+    table[(*ptx)].val = num;
+    table[(*ptx)].level = lev;
+}
+
 
 /*
 * 查找名字的位置.
@@ -1351,11 +1373,16 @@ int statement(bool* fsys, int* ptx, int lev)
                                 gendo(jmp,0,0);     //生成跳转指令，在循环中回填跳转地址
                                 getsymdo;
                             }
-                            else if(sym==ptrsym){     //动态内存分配
+                             else if(sym==ptrsym){     //动态内存分配
+                                char ptr_id[100];
+                                int table_index;    //记录指针在名字表中的序号
                                 getsymdo;
                                 if(sym!=ident){
                                     error(112);
                                 }
+                                enter(ptr, ptx, lev,0 ); // 填写名字表
+                                strcpy(ptr_id,id);     //存储当前的指针id
+                                table_index = *ptx;    //存储当前的指针名字表索引
                                 getsymdo;
                                 if(sym!=becomes){
                                     error(113);
@@ -1372,6 +1399,7 @@ int statement(bool* fsys, int* ptx, int lev)
                                 memcpy(nxtlev, fsys, sizeof(bool)*symnum);
                                 nxtlev[rparen] = true;   //后跟符号为右括号
                                 expressiondo(nxtlev, ptx, lev);    //处理赋值语句
+                                gendo(dya,0,table_index);
                                 if (sym != rparen)
                                 {
                                     error(115);
@@ -1715,6 +1743,7 @@ void interpret()
                         fprintf(fa2, "%f\n", s[t]);
 //                        std::cout<<s[t];
                         t++;
+                        break;
                 }
                 break;
             case lod:   /* 取相对当前过程的数据基地址为a的内存的值到栈顶 */
@@ -1745,6 +1774,19 @@ void interpret()
                     p = i.a;
                 }
                 break;
+            case dya:   //为指针分配堆空间和地址，此时s[t]存储了应分配大小
+                t--;
+                int alloc_size = s[t],index = i.f;
+                table[index].size = alloc_size;
+                table[index].val = heap_ptr;
+                heap_ptr+=alloc_size;
+                std::cout<<"现在堆顶在："<<heap_ptr<<std::endl;
+                std::cout<<"已经分配了:"<<alloc_size<<std::endl;
+                if(heap_ptr>heapsize){
+                    error(118);    //栈空间不足
+                }
+                break;
+
         }
     } while (p != 0);
 }

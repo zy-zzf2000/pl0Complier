@@ -44,6 +44,7 @@ char cur_str[strmaxlen];   //存放字符串
 int continue_cx;   //存放continue语句的指令地址
 bool contains_continue[max_loop];   //用于判断某层循环是否含有continue语句
 float heap[heapsize];   //堆
+int heap_ptr=0;
 
 
 /* 符号 */
@@ -77,7 +78,7 @@ enum object {
 enum fct {
     lit,     opr,     lod,
     sto,     cal,     inte,
-    jmp,     jpc,
+    jmp,     jpc,     dya,
 };
 #define fctnum 8
 
@@ -122,6 +123,7 @@ struct tablestruct
     int adr;            /* 地址，仅const不使用 */
     int size;           /* 需要分配的数据区空间, 仅procedure使用 */
 };
+
 
 struct tablestruct table[txmax]; /* 名字表 */
 
