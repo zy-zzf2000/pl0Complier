@@ -81,7 +81,9 @@ enum object {
 enum fct {
     lit,     opr,     lod,
     sto,     cal,     inte,
-    jmp,     jpc,     dya,
+    jmp,     jpc,
+    dya,   //用于开辟栈空间
+    sth,   //用于向堆空间中存储数据
 };
 #define fctnum 8
 

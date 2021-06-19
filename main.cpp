@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     }
 
     printf("\n");
-    system("pause");
+//    system("pause");
     return 0;
 }
 
@@ -928,7 +928,7 @@ int statement(bool* fsys, int* ptx, int lev)
         }
         else
         {
-            if(table[i].kind != variable||table[i].kind != ptr)
+            if(table[i].kind != variable&&table[i].kind != ptr)
             {
                 error(12);  /* 赋值语句格式错误 */
                 i = 0;
@@ -936,20 +936,34 @@ int statement(bool* fsys, int* ptx, int lev)
             else
             {
                 getsymdo;
-                if(sym == becomes)
+                if(sym == becomes)    //变量赋值
                 {
                     getsymdo;
+                    memcpy(nxtlev, fsys, sizeof(bool)*symnum);
+                    expressiondo(nxtlev, ptx, lev); /* 处理赋值符号右侧表达式 */
+                    if(i != 0)
+                    {
+                        /* expression将执行一系列指令，但最终结果将会保存在栈顶，执行sto命令完成赋值 */
+                        gendo(sto, lev-table[i].level, table[i].adr);
+                    }
+                }
+                else if (sym == lfang){   //数组赋值
+                    getsymdo;
+                    memcpy(nxtlev, fsys, sizeof(bool)*symnum);
+                    nxtlev[rfang] = true;   //后跟符号为右括号
+                    expressiondo(nxtlev, ptx, lev);    //处理赋值语句
+                    getsymdo;
+                    if(sym!=becomes){   //赋值语句错误
+                        error(13);
+                    }
+                    getsymdo;
+                    memcpy(nxtlev, fsys, sizeof(bool)*symnum);
+                    expressiondo(nxtlev, ptx, lev);
+                    gendo(sth,0,i);   //此时，栈顶保存的为需要输入的值，次栈顶保存的为偏移量
                 }
                 else
                 {
                     error(13);  /* 没有检测到赋值符号 */
-                }
-                memcpy(nxtlev, fsys, sizeof(bool)*symnum);
-                expressiondo(nxtlev, ptx, lev); /* 处理赋值符号右侧表达式 */
-                if(i != 0)
-                {
-                    /* expression将执行一系列指令，但最终结果将会保存在栈顶，执行sto命令完成赋值 */
-                    gendo(sto, lev-table[i].level, table[i].adr);
                 }
             }
         }//if (i == 0)
@@ -1778,15 +1792,19 @@ void interpret()
                 break;
             case dya:   //为指针分配堆空间和地址，此时s[t]存储了应分配大小
                 t--;
-                int alloc_size = s[t],index = i.f;
-                table[index].size = alloc_size;
-                table[index].val = heap_ptr;
-                heap_ptr+=alloc_size;
+                table[i.f].size = s[t];
+                table[i.f].val = heap_ptr;
+                heap_ptr+=s[t];
                 std::cout<<"现在堆顶在："<<heap_ptr<<std::endl;
-                std::cout<<"已经分配了:"<<alloc_size<<std::endl;
+                std::cout<<"已经分配了:"<<s[t]<<std::endl;
                 if(heap_ptr>heapsize){
                     error(118);    //栈空间不足
                 }
+                break;
+            case sth:
+                t--;
+                heap[table[i.f].val+(int)s[t-1]] = s[t];
+                std::cout<<"堆中元素的值为："<<heap[9];
                 break;
 
         }
