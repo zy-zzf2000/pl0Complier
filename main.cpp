@@ -928,7 +928,7 @@ int statement(bool* fsys, int* ptx, int lev)
         }
         else
         {
-            if(table[i].kind != variable)
+            if(table[i].kind != variable||table[i].kind != ptr)
             {
                 error(12);  /* ¸³ÖµÓï¾ä¸ñÊ½´íÎó */
                 i = 0;
