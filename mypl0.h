@@ -54,6 +54,7 @@ int heap_ptr=0;
 //for循环，新增downtosym
 //动态内存分配，新增ptrsym
 //动态内存分配，新增mallocsym
+//支持指针操作，新增lfang和rfang
 enum symbol {
     nul,         ident,     number,     plus,      minus,
     times,       slash,     oddsym,     eql,       neq,
@@ -63,8 +64,10 @@ enum symbol {
     writesym,    readsym,   dosym,      callsym,   constsym,
     varsym,      procsym,   str,        forsym,    tosym,
     downtosym,   breaksym,  continuesym,ptrsym,    mallocsym,
+
+    lfang,       rfang
 };
-#define symnum 40
+#define symnum 42
 
 /* 名字表中的类型 */
 enum object {

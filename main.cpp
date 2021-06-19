@@ -126,6 +126,8 @@ void init()
     ssym['.'] = period;
     ssym['#'] = neq;
     ssym[';'] = semicolon;
+    ssym['['] = lfang;
+    ssym[']'] =rfang;
 
     /* 设置保留字名字,按照字母顺序，便于折半查找 */
     strcpy(&(word[0][0]), "begin");
