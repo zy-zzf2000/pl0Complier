@@ -84,6 +84,7 @@ enum fct {
     jmp,     jpc,
     dya,   //用于开辟栈空间
     sth,   //用于向堆空间中存储数据
+    ldh,   //用于从堆空间中读出数据
 };
 #define fctnum 8
 

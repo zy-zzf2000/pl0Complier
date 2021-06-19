@@ -351,6 +351,9 @@ void error(int n)
         case 116:
             std::cout<<"栈空间不足！"<<std::endl;
             break;
+        case 117:
+            std::cout<<"数组调用错误！"<<std::endl;
+            break;
     }
     err++;
 }
@@ -1544,6 +1547,18 @@ int factor(bool* fsys, int* ptx, int lev)
                     case procedur:  /* 名字为过程 */
                         error(21);  /* 不能为过程 */
                         break;
+                    case ptr:     /*名字为数组*/
+                        getsymdo;
+                    if(sym!=lfang){
+                        error(117);
+                    }
+                    int base_addr = table[i].val;  //基址
+                    getsymdo;
+                    memcpy(nxtlev, fsys, sizeof(bool) * symnum);
+                    nxtlev[rparen] = true;
+                    expressiondo(nxtlev, ptx, lev);     //此时偏移量被保存在栈顶
+                    gendo(ldh,0,i);
+                    break;
                 }
             }
             getsymdo;
@@ -1795,8 +1810,8 @@ void interpret()
                 table[i.f].size = s[t];
                 table[i.f].val = heap_ptr;
                 heap_ptr+=s[t];
-                std::cout<<"现在堆顶在："<<heap_ptr<<std::endl;
-                std::cout<<"已经分配了:"<<s[t]<<std::endl;
+//                std::cout<<"现在堆顶在："<<heap_ptr<<std::endl;
+//                std::cout<<"已经分配了:"<<s[t]<<std::endl;
                 if(heap_ptr>heapsize){
                     error(118);    //栈空间不足
                 }
@@ -1804,7 +1819,12 @@ void interpret()
             case sth:
                 t--;
                 heap[table[i.f].val+(int)s[t-1]] = s[t];
-                std::cout<<"堆中元素的值为："<<heap[9];
+//                std::cout<<"堆中元素的值为："<<heap[9];
+                break;
+            case ldh:       //当前栈顶存储值为偏移量
+                t--;
+                s[t] = heap[table[i.f].val+(int)s[t]];   //将堆中相应位置的数据存储到栈顶
+                t++;
                 break;
 
         }
