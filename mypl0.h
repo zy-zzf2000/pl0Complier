@@ -43,6 +43,7 @@ char cur_str[strmaxlen];   //存放字符串
 
 int continue_cx;   //存放continue语句的指令地址
 bool contains_continue[max_loop];   //用于判断某层循环是否含有continue语句
+
 float heap[heapsize];   //堆
 int heap_ptr=0;
 
@@ -62,9 +63,10 @@ enum symbol {
     rparen,      comma,     semicolon,  period,    becomes,
     beginsym,    endsym,    ifsym,      thensym,   whilesym,
     writesym,    readsym,   dosym,      callsym,   constsym,
-    varsym,      procsym,   str,        forsym,    tosym,
-    downtosym,   breaksym,  continuesym,ptrsym,    mallocsym,
+    varsym,      procsym,
 
+    str,        forsym,    tosym,
+    downtosym,   breaksym,  continuesym,ptrsym,    mallocsym,
     lfang,       rfang
 };
 #define symnum 42
@@ -93,7 +95,7 @@ struct instruction
 {
     enum fct f; /* 虚拟机代码指令 */
     int l;      /* 引用层与声明层的层次差 */
-    int a;      /* 根据f的不同而不同 */
+    float a;      /* 根据f的不同而不同 */
 };
 
 FILE* fas;  /* 输出名字表 */
@@ -105,7 +107,7 @@ bool tableswitch;   /* 显示名字表与否 */
 char ch;            /* 获取字符的缓冲区，getch 使用 */
 enum symbol sym;    /* 当前的符号 */
 char id[al+1];      /* 当前ident, 多出的一个字节用于存放0 */
-int num;            /* 当前number */
+float num;            /* 当前number */
 int cc, ll;          /* getch使用的计数器，cc表示当前字符(ch)的位置 */
 int cx;             /* 虚拟机代码指针, 取值范围[0, cxmax-1]*/
 char line[81];      /* 读取行缓冲区 */
@@ -155,7 +157,7 @@ void error(int n);
 int getsym();
 int getch();
 void init();
-int gen(enum fct x, int y, int z);
+int gen(enum fct x, int y, float z);
 int test(bool* s1, bool* s2, int n);
 int inset(int e, bool* s);
 int addset(bool* sr, bool* s1, bool* s2, int n);

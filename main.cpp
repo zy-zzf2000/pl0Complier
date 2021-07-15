@@ -29,20 +29,20 @@ int main(int argc, char** argv)
     bool nxtlev[symnum];
 //    std::cout<<"args:"<<argv[1];
 
-    printf("Input pl/0 file?   ");
-    scanf("%s", fname);     /* 输入文件名 */
+//    printf("Input pl/0 file?   ");
+//    scanf("%s", fname);     /* 输入文件名 */
 
-    fin = fopen(fname, "r");
+    fin = fopen(argv[1], "r");
 
     if (fin)
     {
-        printf("List object code?(Y/N)");   /* 是否输出虚拟机代码 */
-        scanf("%s", fname);
-        listswitch = (fname[0]=='y' || fname[0]=='Y');
+//        printf("List object code?(Y/N)");   /* 是否输出虚拟机代码 */
+//        scanf("%s", fname);
+        listswitch = false;
 
-        printf("List symbol table?(Y/N)");  /* 是否输出名字表 */
-        scanf("%s", fname);
-        tableswitch = (fname[0]=='y' || fname[0]=='Y');
+//        printf("List symbol table?(Y/N)");  /* 是否输出名字表 */
+//        scanf("%s", fname);
+        tableswitch =false;
 
         fa1 = fopen("fa1.tmp", "w");
         fprintf(fa1,"Input pl/0 file?   ");
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     }
 
     printf("\n");
-//    system("pause");
+    system("pause");
     return 0;
 }
 
@@ -213,6 +213,9 @@ void init()
     strcpy(&(mnemonic[inte][0]), "int");
     strcpy(&(mnemonic[jmp][0]), "jmp");
     strcpy(&(mnemonic[jpc][0]), "jpc");
+    strcpy(&(mnemonic[dya][0]), "dya");
+    strcpy(&(mnemonic[sth][0]), "sth");
+    strcpy(&(mnemonic[ldh][0]), "ldh");
 
     /* 设置符号集 */
     for (i=0; i<symnum; i++)
@@ -237,6 +240,8 @@ void init()
 
     statbegsys[forsym] = true;  //新增for符号集
     statbegsys[breaksym] = true;  //新增break符号集
+    statbegsys[continuesym] = true;
+    statbegsys[ptrsym] = true;
 
     /* 设置因子开始符号集 */
     facbegsys[ident] = true;
@@ -298,7 +303,7 @@ void error(int n)
     fprintf(fa1,"****%s!%d\n", space, n);
     switch(n) {
         case 1 :
-            printf("常量说明中不可以用\":=\". \n");
+            printf("常量说明赋值符号错误!\n");
             break;
         case 100:
             printf("字符串超出最大长度！\n");
@@ -461,6 +466,19 @@ int getsym()
                 k++;
                 getchdo;
             } while (ch>='0' && ch<='9'); /* 获取数字的值 */
+
+            if (ch=='.'){                  //浮点数扩增,小数点后为小数部分
+                getchdo;
+                float temp = 0.1;
+                while(ch>='0'&& ch<='9'){       //读取小数部分
+                    num = num + temp*(ch - '0');
+                    temp = temp*0.1;
+                    k++;
+                    getchdo;
+                }
+            }
+
+
             k--;
             if (k > nmax)
             {
@@ -554,7 +572,7 @@ int getsym()
 * y: instruction.l;
 * z: instruction.a;
 */
-int gen(enum fct x, int y, int z )
+int gen(enum fct x, int y, float z )
 {
     if (cx >= cxmax)
     {
@@ -1007,7 +1025,7 @@ int statement(bool* fsys, int* ptx, int lev)
                                 if(cur_str[str_index]=='d'){    //如果是整数，则使用整数读入指令
                                     gendo(opr, 0, 16);
                                 }
-                                else if(cur_str[str_index=='f']){
+                                else if(cur_str[str_index]=='f'){
                                     gendo(opr,0,19);      //如果是浮点数，则使用浮点数读入指令
                                 }
                                 else{
@@ -1050,7 +1068,7 @@ int statement(bool* fsys, int* ptx, int lev)
                         }
                         else
                         {
-                            gendo(opr, 0, 16);  /* 生成输入指令，读取值到栈顶 */
+                            gendo(opr, 0, 19);  /* 生成输入指令，读取值到栈顶 */
                             gendo(sto, lev-table[i].level, table[i].adr);   /* 储存到变量 */
                         }
                         getsymdo;
@@ -1089,9 +1107,9 @@ int statement(bool* fsys, int* ptx, int lev)
                             else if(cur_str[i]=='%'){      //遇到了一个格式化输出
 
                                 getsymdo;             //获取该格式化输出对应的标识符
-                                if(sym!=ident){
-                                    error(101);    //格式化输入没有找到匹配的ident,无法输出
-                                }
+//                                if(sym!=ident){
+//                                    error(101);    //格式化输入没有找到匹配的ident,无法输出
+//                                }
 
                                 memcpy(nxtlev, fsys, sizeof(bool)*symnum);
                                 nxtlev[rparen] = true;
@@ -1130,7 +1148,7 @@ int statement(bool* fsys, int* ptx, int lev)
                             //上述三行代码的作用为更新follow集
 
                             expressiondo(nxtlev, ptx, lev); /* 调用表达式处理，此处与read不同，read为给变量赋值 */
-                            gendo(opr, 0, 14);  /* 生成输出指令，输出栈顶的值 */
+                            gendo(opr, 0, 18);  /* 生成输出指令，输出栈顶的值 */
                         } while (sym == comma);
                     }
 
@@ -1294,7 +1312,7 @@ int statement(bool* fsys, int* ptx, int lev)
 
                                     getsymdo;
                                     expressiondo(nxtlev,ptx,lev);       //处理终止条件表达式，此时控制变量的终值被存储在栈顶，而控制变量被存储在次站顶
-                                    gendo(opr,0,13);  //判断是否小于终止条件，for循环不应包括终止值，因此使用opr 0 13 而非opr 0 10
+                                    gendo(opr,0,13);  //判断是否小于等于终止条件，pascal的for循环包括终止值
 
                                     cx2=cx;                      /* for循环跳转指令的地址位置 */
 
@@ -1320,9 +1338,9 @@ int statement(bool* fsys, int* ptx, int lev)
 
                                     code[cx2].a=cx;         //回填循环跳出位置
                                     if(contains_break[cur_loop_num]==true){    //若有break语句，则需要回填跳转地址
-                                        cur_loop_num--;
                                         code[break_cx].a=cx;
                                     }
+                                    cur_loop_num--;
                                     break;
 
                                     case downtosym:           //步长为的向上增加
@@ -1365,7 +1383,6 @@ int statement(bool* fsys, int* ptx, int lev)
                                         code[cx2].a=cx;         //回填循环跳出位置
 
                                         if(contains_break[cur_loop_num]==true){    //若有break语句，则需要回填跳转地址
-                                            cur_loop_num--;
                                             code[break_cx].a=cx;
                                         }
                                         cur_loop_num--;
@@ -1417,7 +1434,7 @@ int statement(bool* fsys, int* ptx, int lev)
                                 getsymdo;
                                 memcpy(nxtlev, fsys, sizeof(bool)*symnum);
                                 nxtlev[rparen] = true;   //后跟符号为右括号
-                                expressiondo(nxtlev, ptx, lev);    //处理赋值语句
+                                expressiondo(nxtlev, ptx, lev);    //处理表达式,计算分配空间大小
                                 gendo(dya,0,table_index);
                                 if (sym != rparen)
                                 {
@@ -1683,7 +1700,7 @@ void interpret()
                 t++;
                 break;
             case opr:   /* 数学、逻辑运算 */
-                switch (i.a)
+                switch ((int)i.a)
                 {
                     case 0:
                         t = b;
@@ -1778,12 +1795,12 @@ void interpret()
                 }
                 break;
             case lod:   /* 取相对当前过程的数据基地址为a的内存的值到栈顶 */
-                s[t] = s[base(i.l,s,b)+i.a];
+                s[t] = s[base(i.l,s,b)+(int)i.a];
                 t++;
                 break;
             case sto:   /* 栈顶的值存到相对当前过程的数据基地址为a的内存 */
                 t--;
-                s[base(i.l, s, b) + i.a] = s[t];
+                s[base(i.l, s, b) + (int)i.a] = s[t];
                 break;
             case cal:   /* 调用子过程 */
                 s[t] = base(i.l, s, b); /* 将父过程基地址入栈 */
@@ -1807,8 +1824,8 @@ void interpret()
                 break;
             case dya:   //为指针分配堆空间和地址，此时s[t]存储了应分配大小
                 t--;
-                table[i.f].size = s[t];
-                table[i.f].val = heap_ptr;
+                table[(int)i.a].size = s[t];
+                table[(int)i.a].val = heap_ptr;
                 heap_ptr+=s[t];
 //                std::cout<<"现在堆顶在："<<heap_ptr<<std::endl;
 //                std::cout<<"已经分配了:"<<s[t]<<std::endl;
@@ -1818,12 +1835,12 @@ void interpret()
                 break;
             case sth:
                 t--;
-                heap[table[i.f].val+(int)s[t-1]] = s[t];
+                heap[table[(int)i.a].val+(int)s[t-1]] = s[t];
 //                std::cout<<"堆中元素的值为："<<heap[9];
                 break;
             case ldh:       //当前栈顶存储值为偏移量
                 t--;
-                s[t] = heap[table[i.f].val+(int)s[t]];   //将堆中相应位置的数据存储到栈顶
+                s[t] = heap[table[(int)i.a].val+(int)s[t]];   //将堆中相应位置的数据存储到栈顶
                 t++;
                 break;
 
